@@ -1,0 +1,41 @@
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+
+alertmanager:
+  enabled: true
+
+grafana:
+  enabled: true
+  adminPassword: "cost-intelligence-2024"
+  service:
+    type: NodePort
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: default
+          folder: "K8s Cost"
+          type: file
+          options:
+            path: /var/lib/grafana/dashboards/default
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true

@@ -1,0 +1,32 @@
+# workloads/worker/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: workloads
+  labels:
+    app: worker
+    team: data
+    cost-center: product
+spec:
+  replicas: 5           # intentionally too many replicas
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+        team: data
+    spec:
+      containers:
+        - name: worker
+          image: busybox
+          command: ["sh", "-c", "while true; do echo working; sleep 30; done"]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
