@@ -1,0 +1,3 @@
+# cost-engine/requirements.txt
+prometheus-client==0.20.0
+requests==2.31.0
