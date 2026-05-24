@@ -1,0 +1,50 @@
+# recommendations-engine/k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendations-engine
+  namespace: cost-system
+  labels:
+    app: recommendations-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendations-engine
+  template:
+    metadata:
+      labels:
+        app: recommendations-engine
+    spec:
+      serviceAccountName: recommendations-engine
+      containers:
+        - name: recommendations-engine
+          image: recommendations-engine:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PROMETHEUS_URL
+              value: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendations-engine
+  namespace: cost-system
+  labels:
+    app: recommendations-engine
+spec:
+  selector:
+    app: recommendations-engine
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
