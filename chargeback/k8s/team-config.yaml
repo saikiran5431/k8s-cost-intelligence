@@ -1,0 +1,33 @@
+# chargeback/k8s/team-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: team-config
+  namespace: cost-system
+data:
+  teams.json: |
+    {
+      "teams": {
+        "backend": {
+          "name": "Backend Engineering",
+          "email": "backend@company.com",
+          "namespaces": ["workloads"],
+          "budget_monthly": 50.0,
+          "cost_center": "CC-001"
+        },
+        "platform": {
+          "name": "Platform Engineering",
+          "email": "platform@company.com",
+          "namespaces": ["monitoring", "cost-system"],
+          "budget_monthly": 100.0,
+          "cost_center": "CC-002"
+        },
+        "data": {
+          "name": "Data Engineering",
+          "email": "data@company.com",
+          "namespaces": [],
+          "budget_monthly": 75.0,
+          "cost_center": "CC-003"
+        }
+      }
+    }

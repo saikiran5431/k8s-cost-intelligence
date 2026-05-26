@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: cost-alerts-config
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: cost-alerts
+spec:
+  route:
+    groupBy: ['alertname', 'exported_namespace']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 1h
+    receiver: 'default-receiver'
+    routes:
+      - matchers:
+          - name: severity
+            value: critical
+        receiver: 'critical-receiver'
+        groupWait: 10s
+
+  receivers:
+    - name: 'default-receiver'
+      webhookConfigs:
+        - url: 'http://web-ui.cost-system.svc.cluster.local:80/webhook'
+          sendResolved: true
+
+    - name: 'critical-receiver'
+      webhookConfigs:
+        - url: 'http://web-ui.cost-system.svc.cluster.local:80/webhook'
+          sendResolved: true
