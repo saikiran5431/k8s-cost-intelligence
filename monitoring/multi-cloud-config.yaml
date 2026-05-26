@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-pricing-config
+  namespace: cost-system
+data:
+  CLOUD_PROVIDER: "aws"
+  AWS_CPU_COST: "0.048"
+  AWS_MEM_COST: "0.006"
+  GCP_CPU_COST: "0.031611"
+  GCP_MEM_COST: "0.004237"
+  AZURE_CPU_COST: "0.044"
+  AZURE_MEM_COST: "0.005"

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cost-system
+  labels:
+    team: platform
+    cost-center: infrastructure
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    team: platform
+    cost-center: infrastructure
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: workloads
+  labels:
+    team: backend
+    cost-center: product

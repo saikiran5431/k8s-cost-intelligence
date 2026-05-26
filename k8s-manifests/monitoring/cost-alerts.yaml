@@ -1,0 +1,79 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cost-intelligence-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: cost.waste
+      interval: 60s
+      rules:
+
+        - alert: HighNamespaceWaste
+          expr: |
+            k8s_namespace_waste_hourly_cost_dollars > 0.05
+          for: 2m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "High resource waste in {{ $labels.exported_namespace }}"
+            description: "Namespace {{ $labels.exported_namespace }} is wasting ${{ $value | humanize }}/hr on unused resources. Check recommendations at http://localhost:8080"
+
+        - alert: CriticalNamespaceWaste
+          expr: |
+            k8s_namespace_waste_hourly_cost_dollars > 0.10
+          for: 2m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "CRITICAL waste in {{ $labels.exported_namespace }}"
+            description: "Namespace {{ $labels.exported_namespace }} is wasting ${{ $value | humanize }}/hr. Immediate action required."
+
+        - alert: LowNamespaceEfficiency
+          expr: |
+            k8s_namespace_efficiency_percent < 10
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "Low efficiency in {{ $labels.exported_namespace }}"
+            description: "Namespace {{ $labels.exported_namespace }} efficiency is {{ $value | humanize }}%. Resources are massively over-provisioned."
+
+        - alert: HighMonthlyProjection
+          expr: |
+            k8s_namespace_monthly_cost_dollars > 5
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "High monthly cost in {{ $labels.exported_namespace }}"
+            description: "Namespace {{ $labels.exported_namespace }} projected cost is ${{ $value | humanize }} this month."
+
+        - alert: CostExporterDown
+          expr: |
+            up{job="cost-exporter"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Cost exporter is DOWN"
+            description: "The K8s cost exporter is not responding. Cost tracking is unavailable."
+
+    - name: cost.recording
+      interval: 60s
+      rules:
+        - record: cluster:hourly_cost:sum
+          expr: sum(k8s_namespace_hourly_cost_dollars)
+
+        - record: cluster:waste_hourly:sum
+          expr: sum(k8s_namespace_waste_hourly_cost_dollars)
+
+        - record: cluster:efficiency:avg
+          expr: avg(k8s_namespace_efficiency_percent)
