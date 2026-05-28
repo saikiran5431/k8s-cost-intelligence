@@ -1,0 +1,56 @@
+# chargeback/k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chargeback
+  namespace: cost-system
+  labels:
+    app: chargeback
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chargeback
+  template:
+    metadata:
+      labels:
+        app: chargeback
+    spec:
+      containers:
+        - name: chargeback
+          image: chargeback:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8090
+          env:
+            - name: PROMETHEUS_URL
+              value: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
+            - name: TEAM_CONFIG_PATH
+              value: "/config/teams.json"
+          volumeMounts:
+            - name: team-config
+              mountPath: /config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+      volumes:
+        - name: team-config
+          configMap:
+            name: team-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chargeback
+  namespace: cost-system
+spec:
+  selector:
+    app: chargeback
+  ports:
+    - name: http
+      port: 8090
+      targetPort: 8090
