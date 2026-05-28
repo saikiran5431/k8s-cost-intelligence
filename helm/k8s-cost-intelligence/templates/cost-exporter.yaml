@@ -1,0 +1,58 @@
+# cost-engine/k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cost-exporter
+  namespace: cost-system
+  labels:
+    app: cost-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cost-exporter
+  template:
+    metadata:
+      labels:
+        app: cost-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: cost-exporter
+      containers:
+        - name: cost-exporter
+          image: cost-exporter:latest
+          imagePullPolicy: Never       # use local minikube image
+          ports:
+            - containerPort: 8000
+          env:
+            - name: CLOUD_PROVIDER
+              value: "aws"
+            - name: SCRAPE_INTERVAL
+              value: "60"
+            - name: PROMETHEUS_URL
+              value: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cost-exporter
+  namespace: cost-system
+  labels:
+    app: cost-exporter
+spec:
+  selector:
+    app: cost-exporter
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: 8000

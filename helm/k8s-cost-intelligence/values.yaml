@@ -1,0 +1,38 @@
+cloudProvider: aws
+
+costExporter:
+  image: cost-exporter:latest
+  scrapeInterval: 60
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+recommendationsEngine:
+  image: recommendations-engine:latest
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+webUI:
+  image: web-ui:latest
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+chargeback:
+  image: chargeback:latest
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+slack:
+  enabled: true
+  channel: "#alerts"
+  webhookUrl: ""
+
+prometheus:
+  url: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"

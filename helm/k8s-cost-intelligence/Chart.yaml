@@ -1,0 +1,14 @@
+apiVersion: v2
+name: k8s-cost-intelligence
+description: Real-time Kubernetes cost monitoring and optimization platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - kubernetes
+  - cost
+  - monitoring
+  - finops
+maintainers:
+  - name: saikiran5431
+    url: https://github.com/saikiran5431

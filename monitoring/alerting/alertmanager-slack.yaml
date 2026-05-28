@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-slack-config
+  namespace: monitoring
+stringData:
+  alertmanager.yaml: |
+    global:
+      slack_api_url: 'https://hooks.slack.com/services/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'
+      resolve_timeout: 5m
+
+    route:
+      group_by: ['alertname', 'exported_namespace']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'slack-notifications'
+      routes:
+        - matchers:
+            - name: severity
+              value: critical
+          receiver: 'slack-critical'
+          group_wait: 10s
+        - matchers:
+            - name: severity
+              value: warning
+          receiver: 'slack-warnings'
+
+    receivers:
+      - name: 'slack-notifications'
+        slack_configs:
+          - channel: '#k8s-alerts'
+            send_resolved: true
+            icon_emoji: ':money_with_wings:'
+            username: 'K8s Cost Intelligence'
+            title: '{{ if eq .Status "firing" }}🚨{{ else }}✅{{ end }} {{ .CommonLabels.alertname }}'
+            text: |
+              {{ range .Alerts }}
+              *Namespace:* {{ .Labels.exported_namespace }}
+              *Severity:* {{ .Labels.severity }}
+              *Message:* {{ .Annotations.description }}
+              *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+              {{ end }}
+
+      - name: 'slack-critical'
+        slack_configs:
+          - channel: '#k8s-alerts'
+            send_resolved: true
+            icon_emoji: ':rotating_light:'
+            username: 'K8s Cost Intelligence'
+            title: '🔴 CRITICAL: {{ .CommonLabels.alertname }}'
+            text: |
+              {{ range .Alerts }}
+              *Namespace:* {{ .Labels.exported_namespace }}
+              *Message:* {{ .Annotations.description }}
+              {{ end }}
+            color: '#FF0000'
+
+      - name: 'slack-warnings'
+        slack_configs:
+          - channel: '#k8s-alerts'
+            send_resolved: true
+            icon_emoji: ':warning:'
+            username: 'K8s Cost Intelligence'
+            title: '🟡 WARNING: {{ .CommonLabels.alertname }}'
+            text: |
+              {{ range .Alerts }}
+              *Namespace:* {{ .Labels.exported_namespace }}
+              *Message:* {{ .Annotations.description }}
+              {{ end }}
+            color: '#FFA500'
+
+    inhibit_rules:
+      - source_matchers:
+          - name: severity
+            value: critical
+        target_matchers:
+          - name: severity
+            value: warning
+        equal: ['alertname', 'exported_namespace']
