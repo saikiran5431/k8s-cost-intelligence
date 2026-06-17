@@ -35,14 +35,24 @@ def health():
     return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
 
 @app.get("/recommendations")
-def recommendations():
+def recommendations(force: bool = False):
+    """
+    FIX: added an optional ?force=true query param that bypasses the
+    60-second cache and recomputes immediately. Previously, clicking the UI
+    "Refresh" button during an active cache window silently returned the
+    same stale numbers with only the displayed timestamp changing - which
+    made it look like a refresh happened when it didn't. This also matters
+    for the new load generator: without a way to force a recompute, you'd
+    have to wait up to 60s after a load burst to see any effect on the
+    dashboard.
+    """
     global _cache
     now = time.time()
-    if _cache["data"] and (now - _cache["timestamp"]) < CACHE_TTL:
+    if not force and _cache["data"] and (now - _cache["timestamp"]) < CACHE_TTL:
         logger.info("Returning cached recommendations")
         return _cache["data"]
 
-    logger.info("Generating fresh recommendations...")
+    logger.info("Generating fresh recommendations..." + (" (forced)" if force else ""))
     start = time.time()
     result = generate_recommendations()
     elapsed = round(time.time() - start, 2)

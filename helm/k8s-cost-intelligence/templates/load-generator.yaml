@@ -1,0 +1,50 @@
+# load-generator/k8s/deployment.yaml
+# New component: in-cluster manual load generator, driven from the web UI's
+# "Generate Load" panel. Hits workloads/frontend and workloads/backend
+# ClusterIP services with configurable rate/duration so cost & efficiency
+# metrics visibly react during a live demo.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: load-generator
+  namespace: cost-system
+  labels:
+    app: load-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: load-generator
+  template:
+    metadata:
+      labels:
+        app: load-generator
+    spec:
+      containers:
+        - name: load-generator
+          image: load-generator:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8070
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: load-generator
+  namespace: cost-system
+  labels:
+    app: load-generator
+spec:
+  selector:
+    app: load-generator
+  ports:
+    - name: http
+      port: 8070
+      targetPort: 8070

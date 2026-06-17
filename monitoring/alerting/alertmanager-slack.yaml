@@ -1,3 +1,20 @@
+# SECURITY FIX: this file previously had a real, live Slack webhook URL
+# committed in plaintext (stringData). That URL has been treated as
+# compromised - rotate it in Slack (Apps > your app > Incoming Webhooks >
+# regenerate) regardless of what you do with this repo going forward.
+#
+# Do NOT put the real webhook URL back into this file if this repo is or
+# will ever be pushed to a remote (even a private one - private repos leak
+# via forks, CI logs, and accidental visibility changes more often than
+# people expect). Instead, create the secret directly on the cluster:
+#
+#   kubectl create secret generic alertmanager-slack-config \
+#     --namespace monitoring \
+#     --from-literal=alertmanager.yaml="$(envsubst < monitoring/alerting/alertmanager.yaml.template)"
+#
+# or simpler for local Minikube use, just kubectl apply this file after
+# manually editing SLACK_WEBHOOK_URL_PLACEHOLDER below on your machine only
+# (never commit that edit).
 apiVersion: v1
 kind: Secret
 metadata:
@@ -6,7 +23,7 @@ metadata:
 stringData:
   alertmanager.yaml: |
     global:
-      slack_api_url: 'https://hooks.slack.com/services/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'
+      slack_api_url: 'SLACK_WEBHOOK_URL_PLACEHOLDER'
       resolve_timeout: 5m
 
     route:

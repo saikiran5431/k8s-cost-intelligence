@@ -29,6 +29,18 @@ chargeback:
       cpu: 100m
       memory: 128Mi
 
+# New: manual load generator pod, used to drive synthetic traffic at the
+# sample workloads/frontend and workloads/backend services from the web UI.
+loadGenerator:
+  image: load-generator:latest
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
 slack:
   enabled: true
   channel: "#alerts"

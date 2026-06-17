@@ -2,8 +2,8 @@ apiVersion: v2
 name: k8s-cost-intelligence
 description: Real-time Kubernetes cost monitoring and optimization platform
 type: application
-version: 1.0.0
-appVersion: "1.0.0"
+version: 1.1.0
+appVersion: "1.1.0"
 keywords:
   - kubernetes
   - cost

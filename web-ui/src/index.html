@@ -36,6 +36,7 @@
     }
     .header h1 { font-size: 20px; font-weight: 700; color: #e6edf3; }
     .header p  { font-size: 13px; color: #8b949e; margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
     .refresh-btn {
       background: #21262d;
       border: 1px solid #30363d;
@@ -49,9 +50,125 @@
       display: flex; align-items: center; gap: 6px;
     }
     .refresh-btn:hover { background: #30363d; border-color: #58a6ff; }
+    .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .load-toggle-btn {
+      background: #21262d;
+      border: 1px solid #d29922;
+      color: #d29922;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .load-toggle-btn:hover { background: #d2992222; }
+    .load-toggle-btn.active { background: #d2992222; }
 
     /* ── Main layout ── */
     .main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Load generator panel ── */
+    .load-panel {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: none;
+    }
+    .load-panel.open { display: block; }
+    .load-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .load-panel-header h3 { font-size: 14px; font-weight: 600; }
+    .load-panel-sub { font-size: 12px; color: #8b949e; margin-top: 2px; }
+    .load-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 14px;
+      align-items: end;
+    }
+    .load-field label {
+      display: block;
+      font-size: 11px;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .load-field select,
+    .load-field input {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .load-field select:focus,
+    .load-field input:focus { outline: none; border-color: #58a6ff; }
+    .load-start-btn {
+      background: #238636;
+      border: 1px solid #2ea043;
+      color: white;
+      padding: 9px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .load-start-btn:hover { background: #2ea043; }
+    .load-start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .load-stop-btn {
+      background: #da3633;
+      border: 1px solid #f85149;
+      color: white;
+      padding: 9px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .load-stop-btn:hover { background: #f85149; }
+    .load-status-row {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: monospace;
+      color: #c9d1d9;
+      display: none;
+    }
+    .load-status-row.visible { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+    .load-status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #3fb950;
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .load-error {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #f8514922;
+      border: 1px solid #f8514966;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #f85149;
+      display: none;
+    }
+    .load-error.visible { display: block; }
 
     /* ── Summary cards ── */
     .summary-grid {
@@ -265,6 +382,19 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .guessed-tag {
+      background: #d2992222;
+      color: #d29922;
+      border: 1px solid #d2992266;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 10px;
+      text-transform: none;
+      letter-spacing: 0;
     }
     .fix-cmd {
       background: #0d1117;
@@ -330,6 +460,7 @@
       .summary-grid { grid-template-columns: repeat(2, 1fr); }
       .rec-grid { grid-template-columns: 1fr; }
       .main { padding: 16px; }
+      .load-form { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -343,12 +474,60 @@
       <p id="last-updated">Loading recommendations...</p>
     </div>
   </div>
-  <button class="refresh-btn" onclick="loadData()">
-    🔄 Refresh
-  </button>
+  <div class="header-right">
+    <button class="load-toggle-btn" id="load-toggle-btn" onclick="toggleLoadPanel()">
+      ⚡ Generate Load
+    </button>
+    <button class="refresh-btn" id="refresh-btn" onclick="loadData(true)">
+      🔄 Refresh
+    </button>
+  </div>
 </header>
 
 <main class="main">
+
+  <!-- Load Generator Panel -->
+  <div class="load-panel" id="load-panel">
+    <div class="load-panel-header">
+      <div>
+        <h3>⚡ Manual Load Generator</h3>
+        <div class="load-panel-sub">
+          Sends real HTTP traffic from inside the cluster to a sample workload, so you can watch CPU usage / cost / efficiency react live. Runs from a dedicated in-cluster pod.
+        </div>
+      </div>
+    </div>
+
+    <div class="load-form">
+      <div class="load-field">
+        <label>Target</label>
+        <select id="load-target">
+          <option value="frontend">frontend (nginx, workloads ns)</option>
+          <option value="backend">backend (httpbin, workloads ns)</option>
+        </select>
+      </div>
+      <div class="load-field">
+        <label>Duration (seconds)</label>
+        <input type="number" id="load-duration" value="30" min="1" max="300" />
+      </div>
+      <div class="load-field">
+        <label>Requests / second</label>
+        <input type="number" id="load-rps" value="10" min="1" max="200" />
+      </div>
+      <button class="load-start-btn" id="load-start-btn" onclick="startLoad()">▶ Start</button>
+    </div>
+
+    <div class="load-status-row" id="load-status-row">
+      <span><span class="load-status-dot"></span><span id="load-status-text">running</span></span>
+      <span>target: <strong id="load-status-target">—</strong></span>
+      <span>sent: <strong id="load-status-sent">0</strong></span>
+      <span>ok: <strong id="load-status-ok" style="color:#3fb950">0</strong></span>
+      <span>failed: <strong id="load-status-failed" style="color:#f85149">0</strong></span>
+      <span>elapsed: <strong id="load-status-elapsed">0s</strong></span>
+      <button class="load-stop-btn" onclick="stopLoad()">■ Stop</button>
+    </div>
+
+    <div class="load-error" id="load-error"></div>
+  </div>
 
   <!-- Summary Cards -->
   <div class="summary-grid">
@@ -408,11 +587,14 @@
 <script>
   // ── Config ────────────────────────────────────────────────────────────────
   const API_URL = '/api/recommendations';
+  const LOAD_API = '/load-api';
   let allData      = [];
   let currentFilter = 'all';
   let currentSort   = 'saving';
   let countdown     = 60;
-  let timer;
+  let refreshTimer;       // single owner of the 1s countdown/refresh tick
+  let loadPollTimer;      // polls /load-api/load/status while a job is running
+  let isLoadingData  = false;  // guards against overlapping loadData() calls
 
   // ── Icons per issue type ──────────────────────────────────────────────────
   const ISSUE_ICONS = {
@@ -422,13 +604,29 @@
   };
 
   // ── Fetch & render ────────────────────────────────────────────────────────
-  async function loadData() {
-    clearInterval(timer);
+  // FIX: previously, clicking "Refresh" mid-cycle just re-displayed the same
+  // 60s-cached payload with a new "last updated" time, which made manual
+  // refresh feel broken/inert. Refresh now always calls the API with
+  // ?force=true so it actually recomputes. Auto-refresh (the countdown)
+  // intentionally still uses the cache, since recomputing every second
+  // server-side would be wasteful.
+  //
+  // FIX: previously a manual Refresh click while the 1s auto-timer was also
+  // about to fire could start two overlapping loadData() calls, each
+  // clearing/resetting the countdown timer, causing visible flicker. A
+  // simple isLoadingData guard now makes overlapping calls a no-op.
+  async function loadData(force = false) {
+    if (isLoadingData) return;
+    isLoadingData = true;
+
+    clearInterval(refreshTimer);
     countdown = 60;
     document.getElementById('last-updated').textContent = 'Refreshing...';
+    document.getElementById('refresh-btn').disabled = true;
 
     try {
-      const res  = await fetch(API_URL);
+      const url = force ? `${API_URL}?force=true` : API_URL;
+      const res  = await fetch(url);
       const data = await res.json();
 
       // Summary cards
@@ -459,13 +657,17 @@
             Make sure the recommendations API is running
           </p>
         </div>`;
+    } finally {
+      document.getElementById('refresh-btn').disabled = false;
+      isLoadingData = false;
     }
 
-    // Countdown timer
-    timer = setInterval(() => {
+    // Countdown timer (auto-refresh uses the cache; only manual Refresh
+    // and the load-job-completed hook below force a real recompute)
+    refreshTimer = setInterval(() => {
       countdown--;
       document.getElementById('countdown').textContent = countdown;
-      if (countdown <= 0) loadData();
+      if (countdown <= 0) loadData(false);
     }, 1000);
   }
 
@@ -512,6 +714,12 @@
 
     // Build fix command
     const fixCmd = buildFixCommand(r);
+    // FIX: previously the UI silently guessed a deployment name from the
+    // pod name via regex whenever the backend couldn't resolve real
+    // ownership metadata (r.deployment === 'unknown'), with no indication
+    // to the user that the kubectl command below might be targeting a
+    // name that doesn't actually exist. Now flagged explicitly.
+    const isGuessed = r.deployment_is_guessed === true;
 
     const issues = (r.issues || []).map(issue => `
       <div class="issue-item">
@@ -559,7 +767,10 @@
         <div class="issues-list">${issues}</div>
 
         <div class="fix-section">
-          <div class="fix-label">🔧 Quick Fix Command</div>
+          <div class="fix-label">
+            🔧 Quick Fix Command
+            ${isGuessed ? '<span class="guessed-tag" title="Deployment ownership could not be resolved from cluster metadata - this name is a best-effort guess from the pod name and may not exist">⚠ guessed name</span>' : ''}
+          </div>
           <div class="fix-cmd" onclick="copyCmd(this, '${fixCmd.replace(/'/g,"\\'")}')">
             <span>${fixCmd}</span>
             <button class="copy-btn">Copy</button>
@@ -619,8 +830,106 @@
     renderCards();
   }
 
+  // ── Load generator panel ────────────────────────────────────────────────
+  function toggleLoadPanel() {
+    const panel = document.getElementById('load-panel');
+    const btn   = document.getElementById('load-toggle-btn');
+    panel.classList.toggle('open');
+    btn.classList.toggle('active');
+  }
+
+  function showLoadError(msg) {
+    const box = document.getElementById('load-error');
+    box.textContent = msg;
+    box.classList.add('visible');
+    setTimeout(() => box.classList.remove('visible'), 6000);
+  }
+
+  async function startLoad() {
+    const target   = document.getElementById('load-target').value;
+    const duration  = parseInt(document.getElementById('load-duration').value, 10);
+    const rps       = parseInt(document.getElementById('load-rps').value, 10);
+    const startBtn  = document.getElementById('load-start-btn');
+
+    if (!duration || duration < 1 || duration > 300) {
+      showLoadError('Duration must be between 1 and 300 seconds.');
+      return;
+    }
+    if (!rps || rps < 1 || rps > 200) {
+      showLoadError('Requests/sec must be between 1 and 200.');
+      return;
+    }
+
+    startBtn.disabled = true;
+    try {
+      const res = await fetch(`${LOAD_API}/load/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target: target,
+          duration_seconds: duration,
+          requests_per_second: rps
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Request failed (${res.status})`);
+      }
+      document.getElementById('load-status-row').classList.add('visible');
+      pollLoadStatus();
+    } catch (err) {
+      showLoadError(err.message || 'Failed to start load job. Is load-generator reachable?');
+    } finally {
+      startBtn.disabled = false;
+    }
+  }
+
+  async function stopLoad() {
+    try {
+      await fetch(`${LOAD_API}/load/stop`, { method: 'POST' });
+    } catch (err) {
+      showLoadError('Failed to stop load job: ' + err.message);
+    }
+  }
+
+  async function pollLoadStatus() {
+    clearInterval(loadPollTimer);
+    loadPollTimer = setInterval(async () => {
+      try {
+        const res = await fetch(`${LOAD_API}/load/status`);
+        const job = await res.json();
+
+        if (!job) {
+          clearInterval(loadPollTimer);
+          document.getElementById('load-status-row').classList.remove('visible');
+          // Load job ended (completed/stopped) - force a real recompute
+          // immediately rather than waiting up to 60s, so the dashboard
+          // reflects the burst you just generated.
+          loadData(true);
+          return;
+        }
+
+        document.getElementById('load-status-text').textContent = job.status;
+        document.getElementById('load-status-target').textContent = job.target;
+        document.getElementById('load-status-sent').textContent = job.requests_sent;
+        document.getElementById('load-status-ok').textContent = job.requests_succeeded;
+        document.getElementById('load-status-failed').textContent = job.requests_failed;
+        document.getElementById('load-status-elapsed').textContent = job.elapsed_seconds + 's';
+
+        if (job.status !== 'running') {
+          clearInterval(loadPollTimer);
+          document.getElementById('load-status-row').classList.remove('visible');
+          loadData(true);
+        }
+      } catch (err) {
+        clearInterval(loadPollTimer);
+        showLoadError('Lost connection to load-generator while polling status.');
+      }
+    }, 2000);
+  }
+
   // ── Boot ──────────────────────────────────────────────────────────────────
-  loadData();
+  loadData(false);
 </script>
 </body>
 </html>

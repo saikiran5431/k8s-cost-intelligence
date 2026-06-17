@@ -1,47 +1,46 @@
-# web-ui/k8s/deployment.yaml
+# load-generator/k8s/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-ui
+  name: load-generator
   namespace: cost-system
   labels:
-    app: web-ui
+    app: load-generator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: web-ui
+      app: load-generator
   template:
     metadata:
       labels:
-        app: web-ui
+        app: load-generator
     spec:
       containers:
-        - name: web-ui
-          image: web-ui:latest
+        - name: load-generator
+          image: load-generator:latest
           imagePullPolicy: Never
           ports:
-            - containerPort: 80
+            - containerPort: 8070
           resources:
             requests:
-              cpu: "50m"
-              memory: "64Mi"
-            limits:
               cpu: "100m"
               memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: web-ui
+  name: load-generator
   namespace: cost-system
   labels:
-    app: web-ui
+    app: load-generator
 spec:
   selector:
-    app: web-ui
+    app: load-generator
   ports:
     - name: http
-      port: 80
-      targetPort: 80
-  type: NodePort
+      port: 8070
+      targetPort: 8070

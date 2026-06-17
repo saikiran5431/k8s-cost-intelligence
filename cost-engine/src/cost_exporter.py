@@ -25,6 +25,26 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ── Prometheus Gauges (our custom metrics) ──────────────────────────────
+#
+# NOTE on label naming: these gauges are defined with a label called
+# "namespace". Because this exporter's own pod lives inside the
+# "cost-system" namespace, Prometheus's kubernetes_sd_config attaches its
+# own target-discovery "namespace" label (= cost-system) to every series it
+# scrapes from this pod. When the scraped metric ALSO defines a label
+# literally called "namespace" (ours does), Prometheus's default relabeling
+# keeps the target-discovery one and renames our metric's label to
+# "exported_namespace" to avoid the collision.
+#
+# In other words: querying Prometheus directly, you will see
+#   k8s_namespace_hourly_cost_dollars{exported_namespace="workloads", ...}
+# NOT
+#   k8s_namespace_hourly_cost_dollars{namespace="workloads", ...}
+#
+# Every consumer of these specific metrics (Grafana dashboards, alert
+# rules, chargeback.py) must use exported_namespace, not namespace.
+# This is already handled correctly in chargeback.py, the alert rules, and
+# monitoring/grafana/dashboards/cost-intelligence.json - just keep it in
+# mind if you add new panels or queries against these metrics.
 
 NAMESPACE_HOURLY_COST = Gauge(
     "k8s_namespace_hourly_cost_dollars",

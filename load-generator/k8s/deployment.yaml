@@ -1,0 +1,49 @@
+# load-generator/k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: load-generator
+  namespace: cost-system
+  labels:
+    app: load-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: load-generator
+  template:
+    metadata:
+      labels:
+        app: load-generator
+    spec:
+      # No ServiceAccount/RBAC needed: this service only makes outbound
+      # HTTP calls to other in-cluster Services (frontend/backend in the
+      # workloads namespace), it never talks to the K8s API itself.
+      containers:
+        - name: load-generator
+          image: load-generator:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8070
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: load-generator
+  namespace: cost-system
+  labels:
+    app: load-generator
+spec:
+  selector:
+    app: load-generator
+  ports:
+    - name: http
+      port: 8070
+      targetPort: 8070
